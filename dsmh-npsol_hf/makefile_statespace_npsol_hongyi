@@ -50,7 +50,7 @@ include $(MAKEFILE_DIR)/make_machines_master
 include $(MAKEFILE_DIR)/make_libraries_master
 
 #============ PROJECT PATHS ================#
-PROJECT_DIR = $(BASE_DIR)/projects_hf/dsmh-npsol-1.0/src
+PROJECT_DIR = $(BASE_DIR)/projects_hf/dsmh-npsol_hf/src
 EXE_DIR = $(BASE_DIR)/projects_hf/executable
 BUILD_DIR = $(BASE_DIR)/projects_hf/build
 DW_TIME_SERIES_DIR = $(DW_BASE_DIR)/projects_dw/time-series2
