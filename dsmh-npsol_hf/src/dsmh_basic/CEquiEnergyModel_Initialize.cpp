@@ -22,8 +22,11 @@ std::vector<CSampleIDWeight> CEquiEnergyModel::Initialize_WeightedSampling(const
 		vector<double> log_weight = Reweight(samples, stage_index-1, stage_index); 
 		vector<double> log_weight_sum(samples.size()), weight_sum(samples.size()); 
 		log_weight_sum[0] = log_weight[0];  
-		for (int i=1; i<(int)samples.size(); i++)
+
+                for (int i=1; i<(int)samples.size(); i++)
+                {
 			log_weight_sum[i] = AddLogs(log_weight_sum[i-1], log_weight[i]); 
+                }
 		for (int i=0; i<(int)samples.size(); i++) // Normalize
 			weight_sum[i] = exp(log_weight_sum[i] -log_weight_sum.back()); 
 
@@ -33,6 +36,7 @@ std::vector<CSampleIDWeight> CEquiEnergyModel::Initialize_WeightedSampling(const
 			int position = std::lower_bound(weight_sum.begin(), weight_sum.end(), random_number)-weight_sum.begin(); 
 			starters[i] = samples[position]; 	
 		} 
+		
 		return starters; 
 	}
 	else 

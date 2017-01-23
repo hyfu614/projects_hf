@@ -41,9 +41,11 @@ double Generic_Model_TTimeSeries_StateSpace::log_prior_function(const double *x,
 
 bool Generic_Model_TTimeSeries_StateSpace::DrawParametersFromPrior(double *x, int n)
 {
-        TDV parameters(x,n);
+        TDV parameters;
         
         parameters=statespace.DrawPrior();
+        for (int i=0; i<n; i++)
+            *(x+i) = parameters[i];
                 
         return true;
 }

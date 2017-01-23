@@ -88,15 +88,15 @@ static TDV GetRadiusFromSample(const vector<CSampleIDWeight> &sample, const TDV 
 	//quadratic_form.Inverse(SOLVE_SVD);
 	//quadratic_form = (quadratic_form + Transpose(quadratic_form)) * 0.5; // force symmetry
 	TDM quadratic_form = scale * T(scale);	
-	quadratic_form.Inverse(quadratic_form,SOLVE_SVD);
-	quadratic_form = (quadratic_form + T(quadratic_form)) * 0.5; // force symmetry
+        quadratic_form.Inverse(quadratic_form,SOLVE_SVD);
+        quadratic_form = (quadratic_form + T(quadratic_form)) * 0.5; // force symmetry
 	
 	TDV theta; 
 	for (int i=0; i<(int)sample.size(); i++)
 	{
 		theta = sample[i].data - center; 
 		//Radii[i] =  sqrt(InnerProduct(theta, theta, quadratic_form)); 
-		Radii[i] =  sqrt(InnerProduct(theta, quadratic_form, theta));
+		Radii[i] = sqrt(InnerProduct(theta, quadratic_form, theta));
 	}
 	return Radii; 
 }
@@ -139,30 +139,30 @@ static bool GetCenterScaleFromSample(const vector<CSampleIDWeight> &sample, TDV 
 	sample_square = sample_square - OuterProduct(sample_sum, mode.data) - OuterProduct(mode.data, sample_sum);
 	// using center
 	// sample_square = sample_square - OuterProduct(sample_sum, sample_sum); 	
- 
-	//sample_square = (sample_square+Transpose(sample_square))*0.5; 
+        //sample_square = (sample_square+Transpose(sample_square))*0.5; 
 	sample_square = (sample_square+T(sample_square))*0.5;
-
+        
 	/*scale = Cholesky(sample_square); 
 	scale = Transpose(scale); */
-	
 	// Eig analysis
 	//TDenseVector eValue(sample_square.rows,0.0); 
 	//TDenseMatrix eVector(sample_square.rows, sample_square.cols, 0.0); 
 	TDV eValue(sample_square.Rows(),0.0); 
 	TDM eVector(sample_square.Rows(), sample_square.Cols(), true, 0.0); 
-	Eig(eValue, eVector, sample_square); 
+        Eig(eValue, eVector, sample_square); 
+        
 	for (unsigned int i=0; i<eValue.Dim(); i++)
 		eValue[i] = sqrt(eValue[i]); 
-	//scale = MultiplyTranspose(eVector * DiagonalMatrix(eValue), eVector); 
-	scale = MultiplyDiag(eVector,eValue) * T(eVector);
+	//scale = MultiplyTranspose(eVector * DiagonalMatrix(eValue), eVector);
+        scale = sample_square * eVector * T(eVector);
+        cout << "scale: " << scale << "\n";
 	return true; 
 }
 
 
 double LogMDD(const vector<CSampleIDWeight> &posterior, CEquiEnergyModel &model, double t, int proposal_type, int posterior_type)
 {	
-	//TDenseVector center(posterior[0].data.dim, 0.0);
+        //TDenseVector center(posterior[0].data.dim, 0.0);
         //TDenseMatrix scale(posterior[0].data.dim, posterior[0].data.dim, 0.0);
 	TDV center(posterior[0].data.Dim(), 0.0);
         TDM scale(posterior[0].data.Dim(), posterior[0].data.Dim(), true, 0.0);
@@ -171,9 +171,9 @@ double LogMDD(const vector<CSampleIDWeight> &posterior, CEquiEnergyModel &model,
                 cerr << "Error occurred in GetCenterScaleFromSample()\n";
                 abort();
         } 
-	 
+	
 	TDV R = GetRadiusFromSample(posterior, center, scale); 
-
+        cout << "Test here!" << endl;
 	//TVector center_vector = CreateVector(center.dim); 
 	//TMatrix scale_matrix = CreateMatrix(scale.rows, scale.cols); 
 	//TVector R_vector = CreateVector(R.dim); 
@@ -190,6 +190,7 @@ double LogMDD(const vector<CSampleIDWeight> &posterior, CEquiEnergyModel &model,
 	
 	double low=0.1, high=0.9; 
 	TElliptical *elliptical=(TElliptical*)NULL; 
+        cout << "Test here!" << endl;
 	switch (proposal_type)
        	{
                	case USE_GAUSSIAN:
@@ -215,6 +216,7 @@ double LogMDD(const vector<CSampleIDWeight> &posterior, CEquiEnergyModel &model,
                        	abort();
                        	break;
         }
+        cout << "Test here!" << endl;
 
 	TMatrix proposal_matrix=CreateProposalMatrix((int)posterior.size(), model, t, elliptical, posterior_type); 
 	TMatrix posterior_matrix=CreatePosteriorMatrix(posterior, t, elliptical, posterior_type); 

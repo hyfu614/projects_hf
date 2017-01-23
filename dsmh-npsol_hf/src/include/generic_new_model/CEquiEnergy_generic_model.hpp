@@ -17,7 +17,8 @@ public:
         virtual double log_likelihood_function(const double *x, int n);
         virtual double log_prior_function(const double *x, int n); 
 	virtual bool  DrawParametersFromPrior(double *x) const; 
-	
+	virtual std::vector<DM::TDM> impulse_response(const DM::TDV &parameters, unsigned int horizon);
+	virtual DM::TDV log_conditional_likelihood_vector(const DM::TDV &parameters);
 	CEquiEnergy_GenericModel(); 
 	CEquiEnergy_GenericModel(bool _if_bounded, int eL, double _t, const CSampleIDWeight &_x, time_t _tim, CMetropolis *_metropolis, CEESParameter *_parameter, CStorageHead *_storage, Generic_Model *_model);
 	virtual ~CEquiEnergy_GenericModel(); 

@@ -62,3 +62,12 @@ CEquiEnergyModel(_if_bounded, eL, _t, _x, _time, _metropolis, _parameter, _stora
 
 CEquiEnergy_GenericModel::~CEquiEnergy_GenericModel() {}
 
+std::vector<DM::TDM> CEquiEnergy_GenericModel::impulse_response(const DM::TDV &parameters, unsigned int horizon)
+{
+	return target_model->ImpulseResponse(parameters,horizon);
+}
+
+DM::TDV CEquiEnergy_GenericModel::log_conditional_likelihood_vector(const DM::TDV &parameters)
+{
+	return target_model->LogConditionalLikelihoodVector(parameters);
+}

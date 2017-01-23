@@ -59,7 +59,7 @@ int main(int argc, char **argv)
 		{0, 0, 0, 0}
 	}; 
 
-        int nGroup = 1;	// default value for number of groups
+        int nGroup = 30; //1;	// default value for number of groups
 	bool if_pure_MH = false; // default: not pure metropolis hasting
 	
 	CEESParameter sim_option;
@@ -71,7 +71,7 @@ int main(int argc, char **argv)
         sim_option.THIN = 50; // default value for thinning factor
         sim_option.pee = 1.0/(10.0*sim_option.THIN); // defulat value for frequency of equi-energy jump
 	sim_option.burn_in_length = 0;  // default value for burn-in length
-	sim_option.simulation_length = 200000; // defalut value for length of simulation
+	sim_option.simulation_length = 10000;   //200000; // defalut value for length of simulation
 
 	Diagnosis diagnosis_option = OPT_ESS; // option to print out diagnostic information 
 
@@ -141,7 +141,7 @@ int main(int argc, char **argv)
       	Generic_Model_TTimeSeries_StateSpace target_model(statespace); 
       	//
       	/////////////////////////////////////////////////////
-
+        
 	/////////////////////////////////////////////////////////////////////
 	// DSMH Model
 	MPI_Init(&argc, &argv);
@@ -158,7 +158,7 @@ int main(int argc, char **argv)
                 simulation_model.if_bounded = false;
         simulation_model.metropolis = new CMetropolis(&simulation_model); 
         simulation_model.parameter = &sim_option;
-
+        
 	// set current parameter
 	TDV parameter_vector(target_model.GetNumberParameters(),0.0); 
 	if (!target_model.DrawParametersFromPrior(parameter_vector.Vector(), parameter_vector.Dim()))
@@ -166,9 +166,11 @@ int main(int argc, char **argv)
 		cerr << "Error in drawing parameters from prior.\n" ; 
 		exit(1); 
 	}
-        simulation_model.current_sample = CSampleIDWeight(parameter_vector, 0, target_model.log_posterior_function(parameter_vector.Vector(), parameter_vector.Dim()), true);
-        //simulation_model.current_sample = CSampleIDWeight(parameter_vector, 0, simulation_model.log_posterior_function(parameter_vector.Vector(), parameter_vector.Dim()), true);
+	
+        //simulation_model.current_sample = CSampleIDWeight(parameter_vector, 0, target_model.log_posterior_function(parameter_vector.Vector(), parameter_vector.Dim()), true);
+        simulation_model.current_sample = CSampleIDWeight(parameter_vector, 0, simulation_model.log_posterior_function(parameter_vector.Vector(), parameter_vector.Dim()), true);
         CSampleIDWeight mode = simulation_model.current_sample;
+        
 	simulation_model.storage = new CStorageHead (my_rank, sim_option.run_id, sim_option.storage_marker, sim_option.storage_dir, sim_option.number_energy_stage);
 
 	// for communicating lower energy bound, and number of jumps from i-th striation to the j-th striation

@@ -3,6 +3,7 @@
 #include <glob.h>
 #include <iostream>
 
+using namespace std; 
 
 vector<string> glob(const string &pattern)
 {

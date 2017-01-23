@@ -54,7 +54,7 @@ std::vector<int> ExecutingSimulationTask(TDM &jump_table, CEquiEnergyModel &mode
 		{
 			model.timer_when_started = group_index+iGroup; 
 			model.current_sample = start_points[group_index+iGroup]; 
-
+                        
 			// burn-in
 			nOneTimeJump =  model.BurnIn(model.parameter->burn_in_length); 
 

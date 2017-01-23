@@ -81,7 +81,7 @@ void slave_computing(const int N_MESSAGE, CEquiEnergyModel &model, const CSample
 			std::vector<int> nJump = ExecutingSimulationTask(jump_table, model, my_rank, group_index, nGroup,  mode, status.MPI_TAG); 
 			sPackage[RETURN_INDEX_1] = nJump[0];
                         sPackage[RETURN_INDEX_2] = nJump[1];
-
+                        
 			if (jump_table.Rows() && jump_table.Cols())
 			{
 				sPackage[RESERVE_INDEX_START] = jump_table.Rows()*jump_table.Cols(); 

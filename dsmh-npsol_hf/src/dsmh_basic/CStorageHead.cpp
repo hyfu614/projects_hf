@@ -176,7 +176,7 @@ std::vector<CSampleIDWeight> CStorageHead::binning_equal_size(int stage, int bin
 	ClearStatus(stage);
         consolidate(stage);
         std::vector<CSampleIDWeight> sample = DrawAllSample(stage); 
-        if (sample.empty() )
+	if (sample.empty() )
         {
                 cerr << "CStorageHead::binning_equal_size() : error occurred when loading all samples.\n";
                 abort();
@@ -239,9 +239,10 @@ std::vector<CSampleIDWeight>  CStorageHead::DrawAllSample(int stage)
        	for (int i=0; i<(int)filename.size(); i++)
        	{
 		std::vector<CSampleIDWeight> sample_block = LoadSampleFromFile(filename[i]); 
+	//for (int j=0;j<5;j++)
+			//cout << "sample_block:" << sample_block[j].data << endl;
 		sample.insert(sample.end(), sample_block.begin(), sample_block.end()); 
 	}
-	cout << "size of filename:" << filename.size() << endl;
 	return sample; 
 }
 

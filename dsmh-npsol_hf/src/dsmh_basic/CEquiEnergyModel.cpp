@@ -65,6 +65,7 @@ int CEquiEnergyModel::EE_Draw()
 
 	if (dw_uniform_rnd() <= parameter->pee ) // EE jump
 	{
+		x_new.data.UniqueMemory(current_sample.data.Dim()); 
 		if (MakeEquiEnergyJump(x_new, current_sample))
 		{
 			Take_New_Sample_As_Current_Sample(x_new); 
@@ -73,7 +74,8 @@ int CEquiEnergyModel::EE_Draw()
 	}
 	else 
 	{
-		double bounded_log_posterior_new; 
+                double bounded_log_posterior_new; 
+		x_new.data.UniqueMemory(current_sample.data.Dim()); 
 		if (metropolis->BlockRandomWalkMetropolis(bounded_log_posterior_new, x_new, current_sample, 1))
 		{
 			Take_New_Sample_As_Current_Sample(x_new); 
@@ -93,6 +95,7 @@ std::vector<int> CEquiEnergyModel::BurnIn(int burn_in_length)
 
 	for (int i=0; i<burn_in_length; i++)
 	{
+		x_new.data.UniqueMemory(current_sample.data.Dim()); 
 		if (metropolis->BlockRandomWalkMetropolis(bounded_log_posterior_new, x_new, current_sample, 1) )
 		{
 			Take_New_Sample_As_Current_Sample(x_new); 
@@ -122,16 +125,24 @@ std::vector<int> CEquiEnergyModel::Simulation_Prior(bool if_storage, const strin
 	{
 		do
 		{
-			//DrawParametersFromPrior(x_new.data.vector); 
+			//DrawParametersFromPrior(x_new.data.vector);
+			x_new.data.UniqueMemory(current_sample.data.Dim()); 
 			DrawParametersFromPrior(x_new.data.Vector());	// changed by HF
 			x_new.DataChanged(); 
 			log_posterior_function(x_new);
-		} while (x_new.weight <= MINUS_INFINITY); 
+			if (isnan(x_new.weight))
+			{
+				cout << "IRF[0]: " << impulse_response(x_new.data,2)[0] << endl;
+				cout << "LogConditionalLikelihood: " << log_conditional_likelihood_vector(x_new.data) << endl;
+			}
+		//} while ((x_new.weight <= MINUS_INFINITY) || (isnan(x_new.weight))); 
+		} while (x_new.weight <= MINUS_INFINITY);
 		Take_New_Sample_As_Current_Sample(x_new); 
+	
 		if (if_storage)
                	      SaveSampleToStorage(current_sample);
                 if (if_write_file)
-                      write(output_file, &current_sample);
+                      write(output_file, &current_sample); 
 	}
 	if (if_write_file)
                 output_file.close();
@@ -156,6 +167,7 @@ std::vector<int> CEquiEnergyModel::Simulation_Within(DM::TDM &jump_table, bool i
 	{
 		for (int j=0; j<parameter->THIN; j++)
 		{
+			x_new.data.UniqueMemory(current_sample.data.Dim()); 
 			if (metropolis->BlockRandomWalkMetropolis(bounded_log_posterior_new, x_new, current_sample, 1))
 			{// when x_new is accepted
 				if (jump_table.Rows() && jump_table.Cols())
@@ -200,6 +212,7 @@ std::vector<int> CEquiEnergyModel::Simulation_Cross(DM::TDM &jump_table, bool if
 		{
 			x_old = current_sample; 
 			int jump_code = EE_Draw(); 
+                        //cout << "Jump_code:" << jump_code << endl;
 			if (jump_code == EQUI_ENERGY_JUMP)
 				nJump[0] ++; // nEEJump++; 
 			else if (jump_code == METROPOLIS_JUMP)

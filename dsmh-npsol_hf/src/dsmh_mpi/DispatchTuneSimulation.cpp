@@ -122,6 +122,8 @@ void DispatchTuneSimulation(double *sPackage, double *rPackage, const int N_MESS
                 time(&rawtime);
                 log_file << "DispatchTuneSimulation() - done computing MDD: stage=" << model.parameter->highest_stage+1 << " " << ctime(&rawtime) << endl;
         }
+        else if (model.parameter->highest_stage == model.parameter->number_energy_stage-1)
+		consistency[model.parameter->highest_stage+1] = 0.0; 
         else
                 consistency[model.parameter->highest_stage+1] = LogMDD(samples, model, model.parameter->lambda[model.parameter->highest_stage+1], USE_TRUNCATED_POWER, LIKELIHOOD_HEATED);
 
@@ -139,15 +141,26 @@ void DispatchTuneSimulation(double *sPackage, double *rPackage, const int N_MESS
 	  	log_file << "DispatchTuneSimulation() - top of loop: stage= " << stage << " " << ctime(&rawtime) << endl;
 		model.storage->InitializeBin(stage); 
 		vector<CSampleIDWeight> start_points; 
-		if (!samples.empty() )
-			start_points = model.Initialize_WeightedSampling(samples, nInitial, stage+1);
+                
+		/*if (stage==model.parameter->highest_stage)
+                {
+                        //start_points = LoadSampleFromFile("1481559241.start_point");
+                        start_points.resize(nInitial); 
+			for (int i=0; i<nInitial; i++)
+				start_points[i] = mode; 
+                }
+                else
+                {*/
+                if (!samples.empty() )
+			start_points = model.Initialize_WeightedSampling(samples, nInitial, stage+1); 
 		if (samples.empty() || start_points.empty())
 		{
 			start_points.resize(nInitial); 
 			for (int i=0; i<nInitial; i++)
 				start_points[i] = mode; 
 		}
-
+                //}
+                
 		start_point_filename = model.parameter->storage_dir + model.parameter->run_id + string("/") + model.parameter->run_id + START_POINT; 
         	output_file.open(start_point_filename.c_str(), ios::binary|ios::out);
         	if (!output_file.is_open())
@@ -167,9 +180,26 @@ void DispatchTuneSimulation(double *sPackage, double *rPackage, const int N_MESS
 
 		/////////////////////// Tuning
 		string block_file_name = model.parameter->storage_dir  + model.parameter->run_id + string("/") + model.parameter->run_id + BLOCK;
+                //if (stage==model.parameter->highest_stage)
+                //{
+                //        if (!model.metropolis->ReadBlocks("1481559241.block") )
+                //        {
+                //            cerr << "Error occurred while reading " << "1481559241.block" << endl;
+                //            exit(1); 
+                //        }
+                //        model.metropolis->SetBlockScheme(vector<DM::I>(1, DM::I(0,samples[0].data.Dim()-1)));	// changed by HF 
+
+                //        if (!model.metropolis->WriteBlocks(block_file_name))
+                //        {
+                //            cerr << "DispatchTuneSimulation() : Error in writing BMatrix file.\n"; 
+                //            abort(); 
+                //        }
+                //}
+                //else
+                //{
 		if (!FileExist(block_file_name))
                         GetWeightedVarianceMatrix(model, stage, samples);
-	
+                //}
 		double alpha = ScaleFit(sPackage, rPackage, N_MESSAGE, model, stage, nNode, nInitial); 
 		log_file << "Metropolis acceptance rate at stage " <<  stage << " using the scale matrix of the previous stage " << alpha << endl; 
 
@@ -296,12 +326,17 @@ void GetWeightedVarianceMatrix(CEquiEnergyModel &model, int stage, const std::ve
 	// weight
 	vector<double> log_weight = model.Reweight(samples, stage, stage+1);
        	double log_weight_sum = log_weight[0];
+
        	for (int i=1; i<(int)log_weight.size(); i++)
+		{
 		log_weight_sum = AddLogs(log_weight_sum, log_weight[i]);
+		if (isnan(log_weight[i]))
+			cout << "i= " << i << endl << "samples[i].data= " << samples[i].data << endl; 
+		}
        	vector<double> weight(log_weight.size(), 0.0);
        	for (int i=0; i<(int)log_weight.size(); i++)
                 weight[i] = exp(log_weight[i] - log_weight_sum);
-			
+	
 	// block_scheme
         string block_scheme_file_name = model.parameter->storage_dir  + model.parameter->run_id + string("/") + model.parameter->run_id + BLOCK_SCHEME;
 	if (!model.metropolis->ReadBlockScheme(block_scheme_file_name)) 
@@ -372,7 +407,7 @@ double ScaleFit(double *sPackage, double *rPackage, const int N_MESSAGE, CEquiEn
                 nJump[1] += rPackage[RETURN_INDEX_2]; // MH jump
 	}
 	double avg_accpt_rate = (double)nJump[1]/((nNode-1)*sPackage[LENGTH_INDEX]); 
-
+        cout << "avg_accpt_rate =" << avg_accpt_rate << "\n";
 	return avg_accpt_rate; 
 }
 

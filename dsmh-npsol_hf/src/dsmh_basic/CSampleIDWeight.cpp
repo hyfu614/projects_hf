@@ -177,8 +177,7 @@ std::vector<CSampleIDWeight> LoadSampleFromFile(const string &file_name)
 	std::vector<CSampleIDWeight>Y(nSample); 
 	input_file.seekg(0, ios::beg); 
 	for (int i=0; i<(int)nSample; i++)	
-		read(input_file, &(Y[i])); 
-
+		read(input_file, &(Y[i])); 	
 	input_file.close(); 
 	return Y; 		
 }

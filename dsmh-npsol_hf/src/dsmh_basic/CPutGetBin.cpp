@@ -217,6 +217,7 @@ int CPutGetBin::GetNumberFileForDump() const
 int CPutGetBin::DepositSample(const CSampleIDWeight &sample)
 {
 	int index =  nPutUsed;
+	
 	if ((int)dataPut.size() <= nPutUsed)
 		dataPut.push_back(sample); 
 	else

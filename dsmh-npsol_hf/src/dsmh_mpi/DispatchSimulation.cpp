@@ -164,7 +164,7 @@ std::vector<CSampleIDWeight> DispatchSimulation(double *sPackage, double *rPacka
 	if (message_tag != TUNE_TAG_SIMULATION_FIRST && message_tag != SCALE_MATRIX_FIT_TAG) 
 	{
 		samples = model.storage->binning_equal_size(stage, model.parameter->number_striation, model.parameter->lambda[stage]);
-
+		
 		sPackage[LEVEL_INDEX] = (double)stage;
         	sPackage[RESERVE_INDEX_START] = (double)(model.storage->GetNumber_Bin(stage));
         	for (int i=0; i<model.storage->GetNumber_Bin(stage); i++)
