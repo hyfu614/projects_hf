@@ -28,7 +28,7 @@ void CPutGetBin::GetFileNameForFetchConsolidate()
 {
 	stringstream convert;
         convert.str(string());
-        convert << id << ".*.*.record"; // << ".*" // all cluster node; 
+        convert << id << ".*.*.record"; 	// all cluster node; 
 
         string filename_pattern = filename_prefix + convert.str();
 	filename_fetch.clear(); 
@@ -395,7 +395,7 @@ bool CPutGetBin::empty() const
 	{
         	stringstream convert;
         	convert.str(string());
-        	convert << id << ".*.*.record"; // << ".*" // all cluster node; 
+        	convert << id << ".*.*.record"; // all cluster node; 
 
         	string filename_pattern = filename_prefix + convert.str();
 

@@ -55,8 +55,7 @@ bool CSampleIDWeight::PartialCopyFrom(const CSampleIDWeight &right, int offset, 
 	}
 
 	for (int i=0; i<(int)length; i++)
-		data[i+offset] = right.data[i+offset]; 
-		//data(i+offset) = right.data(i+offset);	
+		data[i+offset] = right.data[i+offset]; 	
 	
 	//if (offset ==0 && (int)length == data.dim && (int)length == right.data.dim )
 	if (offset ==0 && length == data.Dim() && length == right.data.Dim() )	// changed by HF
@@ -79,7 +78,6 @@ bool CSampleIDWeight::PartialCopyFrom(int offset1, const CSampleIDWeight &right,
 	}
 	for (int i=0; i<(int)length; i++)
 		data[offset1+i] = right.data[offset2+i]; 
-		//data(offset1+i) = right.data(offset2+i);	// changed by HF
 
 	//if (offset1 == 0 && offset2 == 0 && (int)length == data.dim && (int)length == right.data.dim)
 	if (offset1 == 0 && offset2 == 0 && length == data.Dim() && length == right.data.Dim() )
@@ -102,7 +100,6 @@ istream & read (istream & input_stream, CSampleIDWeight *x)
 	{
 		input_stream.read((char*)&temp_x, sizeof(double)); 
 		x->data[i] = temp_x; 
-		//x->data(i) = temp_x;	// changed by HF
 	}
 	input_stream.read((char*)&(x->id), sizeof(int)); 
 	input_stream.read((char*)&(x->weight), sizeof(double)); 
@@ -121,7 +118,6 @@ ostream& write(ostream & output_stream, const CSampleIDWeight *x)
 	for (unsigned int i=0; i<x->data.Dim(); i++)
 	{
 		temp_x = x->data[i]; 
-		//temp_x = x->data(i);	// changed by HF
 		output_stream.write((char*)&temp_x, sizeof(double)); 
 	}
 	output_stream.write((char*)&(x->id), sizeof(int)); 

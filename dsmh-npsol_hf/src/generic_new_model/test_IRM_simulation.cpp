@@ -71,7 +71,7 @@ int main(int argc, char **argv)
         sim_option.THIN = 50; // default value for thinning factor
         sim_option.pee = 1.0/(10.0*sim_option.THIN); // defulat value for frequency of equi-energy jump
 	sim_option.burn_in_length = 0;  // default value for burn-in length
-	sim_option.simulation_length = 10000;   //200000; // defalut value for length of simulation
+	sim_option.simulation_length = 1000;   //defalut value for length of simulation of each node
 
 	Diagnosis diagnosis_option = OPT_ESS; // option to print out diagnostic information 
 
@@ -136,7 +136,7 @@ int main(int argc, char **argv)
       	//////////////////////////////////////////////////////
       	//
       	// Generate IRM model from specification file
-        string specification_file="IRM_4var_restricted.txt";
+        string specification_file="IRM_2var_restricted.txt";
         TTimeSeries_IRM irm=TTimeSeries_IRM_Specification(specification_file);      	
 	Generic_Model_TTimeSeries_IRM target_model(irm); 
       	//
@@ -168,7 +168,6 @@ int main(int argc, char **argv)
 	}
 	
         simulation_model.current_sample = CSampleIDWeight(parameter_vector, 0, target_model.log_posterior_function(parameter_vector.Vector(), parameter_vector.Dim()), true);
-        //simulation_model.current_sample = CSampleIDWeight(parameter_vector, 0, simulation_model.log_posterior_function(parameter_vector.Vector(), parameter_vector.Dim()), true);
         CSampleIDWeight mode = simulation_model.current_sample;
         
 	simulation_model.storage = new CStorageHead (my_rank, sim_option.run_id, sim_option.storage_marker, sim_option.storage_dir, sim_option.number_energy_stage);

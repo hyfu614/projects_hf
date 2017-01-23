@@ -72,10 +72,9 @@ bool CMetropolis:: BlockRandomWalkMetropolis(double &log_posterior_y, CSampleIDW
 			y.data = x.data + blocks[i]*RandomNormal(b[i]);		// changed by HF
 			y.DataChanged(); 
 			log_current = model->log_posterior_function(y); 
-                        //cout << "Old Posterior=" << log_previous << " New Posterior=" << log_current << endl;
+
 			if (log_current - log_previous >= log(dw_uniform_rnd()) )
 			{
-                                //cout << "new sample here!\n"; 
 				x = y; 
 				log_previous = log_current; 
 				if (!if_new_sample)
@@ -149,7 +148,7 @@ void CMetropolis::GetBlockMatrix_WeightedSampling(const std::vector<CSampleIDWei
 	blocks.resize(block_scheme.size()); 
         DM::TDV mean, d_vector;
         DM::TDM variance, U_matrix, V_matrix, D_matrix;
-        //cout << "Size of block scheme:" << block_scheme.size() << endl;
+
         for (int i_block=0; i_block<(int)block_scheme.size(); i_block++)
         {
                 mean = Zeros(block_scheme[i_block].Size());	// Zeros(block_scheme[i_block].size); changed by HF
@@ -159,25 +158,21 @@ void CMetropolis::GetBlockMatrix_WeightedSampling(const std::vector<CSampleIDWei
                 {
                         //mean = mean + weight[i] * Y[i].data.SubVector(block_scheme[i_block]);
 			//variance = variance + weight[i] * Multiply(Y[i].data.SubVector(block_scheme[i_block]),Y[i].data.SubVector(block_scheme[i_block]));
-			//cout << "weight[i]: " << weight[i] << endl;
 			mean = mean + weight[i] * Y[i].data(block_scheme[i_block]);	//changed by HF
 			variance = variance + weight[i] * OuterProduct(Y[i].data(block_scheme[i_block]));	// changed by HF
                  }
-                //cout << "mean: " << mean << endl;
+                
                 //variance = variance - Multiply(mean, mean);
                 //variance = 0.5 * (variance+Transpose(variance));
 		variance = variance - OuterProduct(mean);	// changed by HF
 		variance = 0.5 * (variance+T(variance));	// changed by HF
-		//cout << "Variance: " << variance << endl;
-                SVD(U_matrix, d_vector, V_matrix, variance);
-                //for (int i=0; i<d_vector.dim; i++)
-		//	d_vector[i] = sqrt(d_vector[i]);
-		//D_matrix = DiagonalMatrix(d_vector);
+		SVD(U_matrix, d_vector, V_matrix, variance);
+                
 		for (unsigned int i=0; i<d_vector.Dim(); i++)
                         d_vector(i) = sqrt(d_vector(i));	// changed by HF
                 D_matrix = Diag(d_vector);
                 U_matrix = U_matrix * D_matrix;
-                //cout << "U_matrix:" << U_matrix << endl;
+                
                 //blocks[i_block]=Zeros(Y[0].data.dim, block_scheme[i_block].size);
 		//blocks[i_block].Insert(block_scheme[i_block], I(0,block_scheme[i_block].size-1), U_matrix);
 		blocks[i_block]=Zeros(Y[0].data.Dim(), block_scheme[i_block].Size());	// changed by HF

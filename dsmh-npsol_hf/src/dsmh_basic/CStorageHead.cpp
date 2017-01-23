@@ -239,8 +239,6 @@ std::vector<CSampleIDWeight>  CStorageHead::DrawAllSample(int stage)
        	for (int i=0; i<(int)filename.size(); i++)
        	{
 		std::vector<CSampleIDWeight> sample_block = LoadSampleFromFile(filename[i]); 
-	//for (int j=0;j<5;j++)
-			//cout << "sample_block:" << sample_block[j].data << endl;
 		sample.insert(sample.end(), sample_block.begin(), sample_block.end()); 
 	}
 	return sample; 

@@ -142,16 +142,7 @@ void DispatchTuneSimulation(double *sPackage, double *rPackage, const int N_MESS
 		model.storage->InitializeBin(stage); 
 		vector<CSampleIDWeight> start_points; 
                 
-		/*if (stage==model.parameter->highest_stage)
-                {
-                        //start_points = LoadSampleFromFile("1481559241.start_point");
-                        start_points.resize(nInitial); 
-			for (int i=0; i<nInitial; i++)
-				start_points[i] = mode; 
-                }
-                else
-                {*/
-                if (!samples.empty() )
+		if (!samples.empty() )
 			start_points = model.Initialize_WeightedSampling(samples, nInitial, stage+1); 
 		if (samples.empty() || start_points.empty())
 		{
@@ -159,8 +150,7 @@ void DispatchTuneSimulation(double *sPackage, double *rPackage, const int N_MESS
 			for (int i=0; i<nInitial; i++)
 				start_points[i] = mode; 
 		}
-                //}
-                
+                                
 		start_point_filename = model.parameter->storage_dir + model.parameter->run_id + string("/") + model.parameter->run_id + START_POINT; 
         	output_file.open(start_point_filename.c_str(), ios::binary|ios::out);
         	if (!output_file.is_open())
@@ -180,26 +170,10 @@ void DispatchTuneSimulation(double *sPackage, double *rPackage, const int N_MESS
 
 		/////////////////////// Tuning
 		string block_file_name = model.parameter->storage_dir  + model.parameter->run_id + string("/") + model.parameter->run_id + BLOCK;
-                //if (stage==model.parameter->highest_stage)
-                //{
-                //        if (!model.metropolis->ReadBlocks("1481559241.block") )
-                //        {
-                //            cerr << "Error occurred while reading " << "1481559241.block" << endl;
-                //            exit(1); 
-                //        }
-                //        model.metropolis->SetBlockScheme(vector<DM::I>(1, DM::I(0,samples[0].data.Dim()-1)));	// changed by HF 
-
-                //        if (!model.metropolis->WriteBlocks(block_file_name))
-                //        {
-                //            cerr << "DispatchTuneSimulation() : Error in writing BMatrix file.\n"; 
-                //            abort(); 
-                //        }
-                //}
-                //else
-                //{
+                
 		if (!FileExist(block_file_name))
                         GetWeightedVarianceMatrix(model, stage, samples);
-                //}
+                
 		double alpha = ScaleFit(sPackage, rPackage, N_MESSAGE, model, stage, nNode, nInitial); 
 		log_file << "Metropolis acceptance rate at stage " <<  stage << " using the scale matrix of the previous stage " << alpha << endl; 
 
@@ -328,11 +302,8 @@ void GetWeightedVarianceMatrix(CEquiEnergyModel &model, int stage, const std::ve
        	double log_weight_sum = log_weight[0];
 
        	for (int i=1; i<(int)log_weight.size(); i++)
-		{
 		log_weight_sum = AddLogs(log_weight_sum, log_weight[i]);
-		if (isnan(log_weight[i]))
-			cout << "i= " << i << endl << "samples[i].data= " << samples[i].data << endl; 
-		}
+		
        	vector<double> weight(log_weight.size(), 0.0);
        	for (int i=0; i<(int)log_weight.size(); i++)
                 weight[i] = exp(log_weight[i] - log_weight_sum);

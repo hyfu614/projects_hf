@@ -69,8 +69,7 @@ public:
 	virtual double log_posterior_function(const double *x, int n)=0; 
         virtual double log_likelihood_function(const double *x, int n)=0;
 	virtual double log_prior_function(const double *x, int n) = 0;  
-	virtual std::vector<DM::TDM> impulse_response(const DM::TDV &parameters, unsigned int horizon) = 0;
-	virtual DM::TDV log_conditional_likelihood_vector(const DM::TDV &parameters) =0;
+	
 	// Draw samples
 	int EE_Draw(); 	// equi-energy draw
 	bool MakeEquiEnergyJump(CSampleIDWeight &y_end, const CSampleIDWeight &y_initial); 

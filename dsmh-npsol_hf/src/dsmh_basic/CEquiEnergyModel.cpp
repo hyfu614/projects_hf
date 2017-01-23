@@ -130,12 +130,6 @@ std::vector<int> CEquiEnergyModel::Simulation_Prior(bool if_storage, const strin
 			DrawParametersFromPrior(x_new.data.Vector());	// changed by HF
 			x_new.DataChanged(); 
 			log_posterior_function(x_new);
-			if (isnan(x_new.weight))
-			{
-				cout << "IRF[0]: " << impulse_response(x_new.data,2)[0] << endl;
-				cout << "LogConditionalLikelihood: " << log_conditional_likelihood_vector(x_new.data) << endl;
-			}
-		//} while ((x_new.weight <= MINUS_INFINITY) || (isnan(x_new.weight))); 
 		} while (x_new.weight <= MINUS_INFINITY);
 		Take_New_Sample_As_Current_Sample(x_new); 
 	
@@ -212,7 +206,7 @@ std::vector<int> CEquiEnergyModel::Simulation_Cross(DM::TDM &jump_table, bool if
 		{
 			x_old = current_sample; 
 			int jump_code = EE_Draw(); 
-                        //cout << "Jump_code:" << jump_code << endl;
+                        
 			if (jump_code == EQUI_ENERGY_JUMP)
 				nJump[0] ++; // nEEJump++; 
 			else if (jump_code == METROPOLIS_JUMP)

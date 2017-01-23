@@ -22,9 +22,7 @@ public:
 	virtual double log_likelihood_function(const double *x, int n);
 	virtual double log_prior_function(const double *x, int n); 
 	virtual bool DrawParametersFromPrior(double *x, int n);
-	virtual int GetNumberParameters() const { return irm.NumberParameters(); }; 
-        virtual std::vector<DM::TDM> ImpulseResponse(const DM::TDV &parameters, unsigned int horizon) {return irm.ImpulseResponse(parameters,horizon); };
-	virtual DM::TDV LogConditionalLikelihoodVector(const DM::TDV &parameters) {return irm.LogConditionalLikelihoodVector(parameters); };        
+	virtual int GetNumberParameters() const { return irm.NumberParameters(); };   
 };
 
 

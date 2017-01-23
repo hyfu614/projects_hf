@@ -597,12 +597,12 @@ void GenerateData(void)
    cout << "IRM log likelihood: " << irm2.LogLikelihood(parameters) << endl;
    cout << "IRM log conditional likelihood:\n" << irm2.LogConditionalLikelihoodVector(parameters) << endl;
 
-   for (unsigned int i=0; i < 100; i++)
+   /*for (unsigned int i=0; i < 100; i++)
      {
 	parameters = irm2.DrawPrior();
 	cout << "LogPrior: " << irm2.LogPrior(parameters) << endl;
 	cout << "LogLikelihood: " << irm2.LogLikelihood(parameters) << endl;
-     }
+     }*/
    //===========================================================================
 }
 

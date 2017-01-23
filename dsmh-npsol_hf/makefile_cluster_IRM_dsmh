@@ -30,7 +30,7 @@ BUILD_DIR = $(EXEC_DIR)/build
 LIBS_DIR = -L$(MKL_LIBS_DIR) -L$(GSL_LIBS_DIR) -L$(MPI_LIBS_DIR) -L$(NPSOL_LIBS_DIR)
 LIBS = $(MKL_LIBS) $(NPSOL_LIBS) -lgsl -lmpich -lopa -lmpl -lrt
 INCLUDE_DIR = -Isrc/include/dsmh_basic -Isrc/include/dsmh_mpi -I$(BASE_DIR)/utilities_dw/include -I$(IRM_PROJECT_DIR) -Isrc/include/generic_new_model -I/usr/include/gsl -I/usr/include/mpich-x86_64
-VPATH := $(VPATH) $(IRM_PROJECT_DIR) $(BUILD_DIR) src/dsmh_basic/ src/dsmh_mpi/ src/generic_new_model/ src/time-series2/
+VPATH := $(VPATH) $(IRM_PROJECT_DIR) $(BUILD_DIR) src/dsmh_basic/ src/dsmh_mpi/ src/generic_new_model/
 
 utilities_SOURCES =dw_array.o dw_ascii.o dw_ascii_v2.o DM.o dw_elliptical.o dw_math.o dw_matrix.o dw_matrix_rand.o dw_parse_cmd.o dw_rand_gsl.o bmatrix.o dw_error.o dw_matrix_sort.o DM_lapack.o 
 
