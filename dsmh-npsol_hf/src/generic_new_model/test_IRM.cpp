@@ -9,7 +9,7 @@
 #include "IRM.hpp"
 #include "specification_io.hpp"
 #include "sbvar.hpp"
-
+#include "test_IRM_SBVAR.hpp"
 
 using namespace std;
 using namespace DM;
@@ -17,8 +17,11 @@ using namespace TS;
 
 void GeneralVAR(void)
 {
+  // file id 
+  unsigned int nfile=3; 
+  string specification_file="IRM_SBVAR_3var_4lag_restricted.txt";
   // sizes
-  unsigned int nvar=6, nlag_original=0, nobs=100, truncate=10, nlag;
+  unsigned int nvar=3, nlag_original=4, nobs=100, truncate=10, nlag;
 
   cout << "Number variables: " << nvar << "\nNumber lags: " << nlag_original << "\nNumber observations: " << nobs << endl;
   if (truncate > 0)
@@ -57,7 +60,7 @@ void GeneralVAR(void)
 
   // reduced form companion matrix
   TDM B=VCat(VCat(A % F,HCat(Identity(nvar*(nlag-1)),Zeros(nvar*(nlag-1),nvar+1))),One(nvar*nlag,nvar*nlag+1));
-
+  //cout << "B: \n" << B << endl;
   //===============================================================================
   //=== generate data
   //===============================================================================
@@ -88,9 +91,62 @@ void GeneralVAR(void)
       }
   cout << "data generated\n";
 
+  // write data
+  stringstream filename;
+  ofstream output;
+  filename.str("");
+  filename << "SBVAR_data_" << nvar << "var_" << nlag << "lag" << nfile << ".txt";
+  output.open(filename.str().c_str());
+  if (!output.is_open())
+     throw dw_exception("GeneralVAR() - unable to open " + filename.str());
+  TDV y(nvar);
+  for (int t=nlag-1; t >= 0; t--)
+    {
+      y(I(0,End),X,0,I(t*nvar,(t+1)*nvar-1));
+      output << y;
+    }
+  output << Y;
+  output.close();
+
+  unsigned int npre=nvar*nlag+1;
   // Setup SBVAR model
+  TSpecification spec(specification_file);
+  // get SBVAR contemporanous restriction matrix
+  TDM AC;
+  vector< vector<bool> > AR;
+  spec.RestrictionMatrix(AR,AC,"//== SBVAR: Simple Restrictions A",' ');
+  if ((AC.Rows() != nvar) || (AC.Cols() != nvar))
+     throw dw_exception("TTimeSeries_SBVAR_Specification() - invalid size of contemporaneous restriction matrix");
+  if (AC != 0.0)
+     throw dw_exception("TTimeSeries_SBVAR_Specification() - restrictions must be linear");
+
+  // get SBVAR predetermined restriction matrix
+  TDM FC;
+  vector< vector<bool> > FR;
+  spec.RestrictionMatrix(FR,FC,"//== SBVAR: Simple Restrictions F",' ');
+  if ((FC.Rows() != nvar) || (FC.Cols() != npre))
+     throw dw_exception("TTimeSeries_SBVAR_Specification() - invalid size of predetermined restriction matrix");
+  if (FC != 0.0)
+     throw dw_exception("TTimeSeries_SBVAR_Specification() - restrictions must be linear");
+
+  // create SBVAR equation mappings
+  TPArray<TLinear> Fnct;
+  TDM parameters=HCat(AC,FC);
+  for (unsigned int i=0; i < nvar; i++)
+    {
+	I idx;
+	for (unsigned int j=0; j < nvar; j++)
+	  if (AR[i][j]) idx(j);
+	for (unsigned int j=0; j < npre; j++)
+	  if (FR[i][j]) idx(nvar+j);
+	Fnct.push(new TLinear_insert(nvar+npre,idx));
+    }
+  TLinearProduct Fn(Fnct);
+
+  TDV Hyperparameters=spec.Vector("//== SBVAR: Prior Hyperparameters");
   TLikelihood_SBVAR sbvar_likelihood(Y,X);
-  TTimeSeries_SBVAR sbvar(sbvar_likelihood,TFlatPrior(sbvar_likelihood.NumberParameters()),TIdentityFunction(sbvar_likelihood.NumberParameters()));
+  //TTimeSeries_SBVAR sbvar(sbvar_likelihood,TFlatPrior(sbvar_likelihood.NumberParameters()),TIdentityFunction(sbvar_likelihood.NumberParameters()));
+  TTimeSeries_ConjugateSBVAR sbvar(Y,X,TDensity_SimsZha(Y,X,Fn,1,Hyperparameters));
 
   // Setup IRM
   TPArray<TRealFunction> f0(nvar);
@@ -107,7 +163,16 @@ void GeneralVAR(void)
 
   // Set SBVAR parameters
   TDV sbvar_parameters=sbvar.GetLikelihoodParameters(A,F);
+  //cout << "sbvar_parameters: " << sbvar_parameters << endl;
   cout << "log likelihood (sbvar): " << sbvar.LogLikelihood(sbvar_parameters) << endl;
+  filename.str("");
+  filename << "SBVAR_parameters_" << nvar << "var_" << nlag << "lag" << nfile << ".txt";
+  output.open(filename.str().c_str());
+  if (!output.is_open())
+     throw dw_exception("GeneralVAR() - unable to open " + filename.str());
+  output << "SBVAR_parameters:\n" << sbvar_parameters << endl;
+  output << "SBVAR_logMDD: " << sbvar.LogMDD();
+  output.close();
   
   // Set IRM parameters
   TDV irm_parameters(irm.NumberParameters());
@@ -120,7 +185,15 @@ void GeneralVAR(void)
       v=Cat(Vec(B),e(I(0,nvar-1),invA(I(0,End),j)));
       for (unsigned int i=0; i < nvar; k+=v.Dim(), i++) irm_parameters(I(k,End),v);
     }
+  //cout << "Number of irm parameters: " << irm_parameters.Dim() << endl;
+  //cout << "irm_parameters: " << irm_parameters << endl;
   cout << "log likelihood (irm): " << irm.LogLikelihood(irm_parameters) << endl;
+
+  //test SBVAR to IRM parameters mapping function
+  TTimeSeries_IRM irm2=TTimeSeries_IRM_SBVAR_Specification(specification_file);
+  TDV irm2_parameters=irm2.LikelihoodParameters(sbvar_parameters);
+  //cout << "irm2_parameters: " << irm2_parameters << endl;
+  cout << "Diff between parameters: " << Sum(irm_parameters-irm2_parameters) << endl;
 
   // no dynamics?
   if (nlag_original == 0)
@@ -597,12 +670,12 @@ void GenerateData(void)
    cout << "IRM log likelihood: " << irm2.LogLikelihood(parameters) << endl;
    cout << "IRM log conditional likelihood:\n" << irm2.LogConditionalLikelihoodVector(parameters) << endl;
 
-   /*for (unsigned int i=0; i < 100; i++)
+   for (unsigned int i=0; i < 100; i++)
      {
 	parameters = irm2.DrawPrior();
 	cout << "LogPrior: " << irm2.LogPrior(parameters) << endl;
 	cout << "LogLikelihood: " << irm2.LogLikelihood(parameters) << endl;
-     }*/
+     }
    //===========================================================================
 }
 
@@ -614,11 +687,11 @@ int main(void)
 
       //TestGamma();
 
-      //GeneralVAR();
+      GeneralVAR();
 
       //GenerateData_alt();
 
-      GenerateData();
+      //GenerateData();
 
       // vector<TDV> f0(irm.NumberObservations()+1);
       // vector<TDM> s(irm.NumberObservations());

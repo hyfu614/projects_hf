@@ -28,13 +28,15 @@
 
 // models derived from generic_model
 #include "generic_model.hpp"
-#include "generic_model_TTimeSeries_IRM.hpp"
+#include "generic_model_TTimeSeries.hpp"
 #include "CEquiEnergy_generic_model.hpp"
+#include "test_IRM_SBVAR.hpp"
 
 using namespace std;
 using namespace DM; 
 using namespace TS;
 
+	
 int main(int argc, char **argv)
 {
 	static struct option long_options[] =
@@ -51,6 +53,7 @@ int main(int argc, char **argv)
                 {"Number of draws per group", required_argument, 0, 'N'},
 		{"Burn-in length", required_argument, 0, 'B'}, 
                 {"Number of groups", required_argument, 0, 'G'},
+		{"Degree of IRM model", required_argument, 0, 'D'},
 		// Diaoganistic options
 		{"Display jump rate", no_argument, 0, 'j'}, 
 		{"Display transitions across striations", no_argument, 0, 't'},
@@ -61,6 +64,7 @@ int main(int argc, char **argv)
 
         int nGroup = 1;	// default value for number of groups
 	bool if_pure_MH = false; // default: not pure metropolis hasting
+	int degree = 1;	// default value for degree of IRM model 
 	
 	CEESParameter sim_option;
 	sim_option.storage_dir = string("./"); // default directory for saving results
@@ -71,7 +75,7 @@ int main(int argc, char **argv)
         sim_option.THIN = 50; // default value for thinning factor
         sim_option.pee = 1.0/(10.0*sim_option.THIN); // defulat value for frequency of equi-energy jump
 	sim_option.burn_in_length = 0;  // default value for burn-in length
-	sim_option.simulation_length = 1000;   //defalut value for length of simulation of each node
+	sim_option.simulation_length = 10000;   //200000; // defalut value for length of simulation
 
 	Diagnosis diagnosis_option = OPT_ESS; // option to print out diagnostic information 
 
@@ -79,7 +83,7 @@ int main(int argc, char **argv)
 	int option_index = 0;	
 	while (1)
         {
-                int c = getopt_long(argc, argv, "F:R:oH:M:T:P:I:N:B:G:jtdm", long_options, &option_index);
+                int c = getopt_long(argc, argv, "F:R:oH:M:T:P:I:N:B:G:D:jtdm", long_options, &option_index);
                 if (c == -1)
                         break;
 		switch(c)
@@ -105,7 +109,9 @@ int main(int argc, char **argv)
 			case 'B': 
 				sim_option.burn_in_length = atoi(optarg);  break; 
                         case 'G':
-                                nGroup= atoi(optarg); break;
+                                nGroup = atoi(optarg); break;
+			case 'D':
+                                degree = atoi(optarg); break;
 			case 'j':
 				diagnosis_option = static_cast<Diagnosis>(static_cast<int>(diagnosis_option) | static_cast<int>(OPT_JMP_RT)); break; 
 			case 't':
@@ -136,9 +142,15 @@ int main(int argc, char **argv)
       	//////////////////////////////////////////////////////
       	//
       	// Generate IRM model from specification file
-        string specification_file="IRM_2var_restricted.txt";
-        TTimeSeries_IRM irm=TTimeSeries_IRM_Specification(specification_file);      	
-	Generic_Model_TTimeSeries_IRM target_model(irm); 
+        stringstream filename;
+	filename.str("");
+   	filename << "IRM_3var_deg" << degree << "_restricted.txt";
+   	TTimeSeries_IRM irm=TTimeSeries_IRM_Specification(filename.str());
+        //string specification_file="IRM_3var_deg2_restricted.txt";
+        //TTimeSeries_IRM irm=TTimeSeries_IRM_Specification(specification_file); 
+	//string specification_file="IRM_SBVAR_3var_4lag_restricted.txt";
+  	//TTimeSeries_IRM irm=TTimeSeries_IRM_SBVAR_Specification(specification_file);     	
+	Generic_Model_TTimeSeries target_model(irm);  
       	//
       	/////////////////////////////////////////////////////
         
@@ -168,6 +180,7 @@ int main(int argc, char **argv)
 	}
 	
         simulation_model.current_sample = CSampleIDWeight(parameter_vector, 0, target_model.log_posterior_function(parameter_vector.Vector(), parameter_vector.Dim()), true);
+        //simulation_model.current_sample = CSampleIDWeight(parameter_vector, 0, simulation_model.log_posterior_function(parameter_vector.Vector(), parameter_vector.Dim()), true);
         CSampleIDWeight mode = simulation_model.current_sample;
         
 	simulation_model.storage = new CStorageHead (my_rank, sim_option.run_id, sim_option.storage_marker, sim_option.storage_dir, sim_option.number_energy_stage);

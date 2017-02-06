@@ -1,7 +1,7 @@
 # -*- Makefile -*- 
 #============== LIBRARIES SUPPORTED ============#
   
-BASE_DIR = $(HOME)/nas03/projects
+BASE_DIR = $(HOME)/nas03/f1hxf02/projects
 
 CC = mpicc
 CPP = mpic++
@@ -10,12 +10,12 @@ CPP = mpic++
 MPI_LIBS_DIR = /usr/lib64/mpich/lib
 
 #MKL_LIBS_DIR = /opt/intel-2013b/mkl/lib/intel64
-MKL_LIBS_DIR = $(HOME)/nas03/lib
+MKL_LIBS_DIR = $(HOME)/nas03/f1hxf02/lib
 MKL_LIBS = -Wl,--start-group -lmkl_intel_lp64 -lmkl_sequential -lmkl_core -Wl,--end-group
 
 GSL_LIBS_DIR = /usr/lib64
 
-NPSOL_LIBS_DIR = $(HOME)/nas03/npsol/Linux-x86_64/optimized/lib/ 
+NPSOL_LIBS_DIR = $(HOME)/nas03/f1hxf02/npsol/Linux-x86_64/optimized/lib/ 
 NPSOL_LIBS = -lnpsol_f77 -llssol_f77 -lgfortran
 
 ################################################################################
@@ -38,10 +38,10 @@ dsmh_basci_SOURCES = CEESParameter.o CEquiEnergyModel.o CEquiEnergyModel_Initial
 
 dsmh_mpi_SOURCES = DispatchSimulation.o DispatchTuneSimulation.o EstimateLogMDD.o ExecutingSimulationTask.o GetCommunicationParameter.o HighestPlus1Stage.o HighestPlus1Stage_Prior.o master_deploying.o mdd_function.o slave_computing.o  
 
-generic_model_SOURCES = CEquiEnergy_generic_model.o generic_model_TTimeSeries_IRM.o
+generic_model_SOURCES = CEquiEnergy_generic_model.o generic_model_TTimeSeries.o test_IRM_SBVAR.o
 #time_series_SOURCES = dw_data.o regime_processes.o CEquiEnergy_TimeSeries.o
 
-IRM_OBJS = $(utilities_SOURCES) TTimeSeries.o TData.o TFunction.o TDensity.o specification_io.o IRM.o $(dsmh_basci_SOURCES) $(dsmh_mpi_SOURCES) $(generic_model_SOURCES)
+IRM_OBJS = $(utilities_SOURCES) TTimeSeries.o TData.o TFunction.o TDensity.o specification_io.o IRM.o sbvar.o $(dsmh_basci_SOURCES) $(dsmh_mpi_SOURCES) $(generic_model_SOURCES)
 
 #sbvar_simulation_SOURCES = $(utilities_SOURCES) sbvar.o sbvar_blocks.o hyper_parameter.o $(dsmh_basci_SOURCES) $(dsmh_mpi_SOURCES) $(time_series_SOURCES)
 

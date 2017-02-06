@@ -28,7 +28,7 @@
 
 // models derived from generic_model
 #include "generic_model.hpp"
-#include "generic_model_TTimeSeries_StateSpace.hpp"
+#include "generic_model_TTimeSeries.hpp"
 #include "CEquiEnergy_generic_model.hpp"
 
 using namespace std;
@@ -59,7 +59,7 @@ int main(int argc, char **argv)
 		{0, 0, 0, 0}
 	}; 
 
-        int nGroup = 30; //1;	// default value for number of groups
+        int nGroup = 1;	// default value for number of groups
 	bool if_pure_MH = false; // default: not pure metropolis hasting
 	
 	CEESParameter sim_option;
@@ -138,7 +138,7 @@ int main(int argc, char **argv)
       	// Fill details for the model derived from generic_model
         string specification_file="statespace_specification_test.txt";
         TTimeSeries_StateSpace statespace=TTimeSeries_StateSpace_Specification(specification_file);
-      	Generic_Model_TTimeSeries_StateSpace target_model(statespace); 
+      	Generic_Model_TTimeSeries target_model(statespace); 
       	//
       	/////////////////////////////////////////////////////
         
@@ -167,8 +167,8 @@ int main(int argc, char **argv)
 		exit(1); 
 	}
 	
-        //simulation_model.current_sample = CSampleIDWeight(parameter_vector, 0, target_model.log_posterior_function(parameter_vector.Vector(), parameter_vector.Dim()), true);
-        simulation_model.current_sample = CSampleIDWeight(parameter_vector, 0, simulation_model.log_posterior_function(parameter_vector.Vector(), parameter_vector.Dim()), true);
+        simulation_model.current_sample = CSampleIDWeight(parameter_vector, 0, target_model.log_posterior_function(parameter_vector.Vector(), parameter_vector.Dim()), true);
+        //simulation_model.current_sample = CSampleIDWeight(parameter_vector, 0, simulation_model.log_posterior_function(parameter_vector.Vector(), parameter_vector.Dim()), true);
         CSampleIDWeight mode = simulation_model.current_sample;
         
 	simulation_model.storage = new CStorageHead (my_rank, sim_option.run_id, sim_option.storage_marker, sim_option.storage_dir, sim_option.number_energy_stage);

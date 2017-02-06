@@ -5,7 +5,7 @@
 //** Required field. Filename of raw data file. Can contain a path if the file 
 //** is not in the current working directory.
 //== Data: Raw File
-IRM_iid_data_2var.txt
+IRM_data_2var.txt
 
 //** Required field. Delimiter used to separate fields in raw data file. 
 //** Permissible values are any printable character, "tab" or "space".
