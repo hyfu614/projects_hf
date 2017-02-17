@@ -10,6 +10,7 @@
 #include "specification_io.hpp"
 #include "sbvar.hpp"
 #include "test_IRM_SBVAR.hpp"
+#include "TData.hpp"
 
 using namespace std;
 using namespace DM;
@@ -18,7 +19,7 @@ using namespace TS;
 void GeneralVAR(void)
 {
   // file id 
-  unsigned int nfile=3; 
+  unsigned int nfile=5; 
   string specification_file="IRM_SBVAR_3var_4lag_restricted.txt";
   // sizes
   unsigned int nvar=3, nlag_original=4, nobs=100, truncate=10, nlag;
@@ -30,7 +31,11 @@ void GeneralVAR(void)
     cout << "No truncation\n";
 
   // generate random parameters for stationary VAR
-  TDM A=RandomNormal(nvar,nvar), F=RandomNormal(nvar,nvar*nlag_original+1);
+  TDM A, F;
+  double mae;
+  do {
+  A=RandomNormal(nvar,nvar);
+  F=RandomNormal(nvar,nvar*nlag_original+1);
   if (nlag_original == 0)
     {
       nlag=1;
@@ -42,7 +47,7 @@ void GeneralVAR(void)
       TDM B=VCat(A % F(I(0,End),I(0,nvar*nlag-1)),HCat(Identity(nvar*(nlag-1)),Zeros(nvar*(nlag-1),nvar)));
       TDV re, im;
       Eig(re,im,B);
-      double mae=0.0;
+      mae=0.0;
       for (unsigned int i=re.Dim(); i-- > 0; )
 	if (re[i]*re[i]+im[i]*im[i] > mae) mae=re[i]*re[i]+im[i]*im[i];
       if (mae > 1.0)
@@ -55,9 +60,10 @@ void GeneralVAR(void)
       mae=0.0;
       for (unsigned int i=re.Dim(); i-- > 0; )
 	if (re[i]*re[i]+im[i]*im[i] > mae) mae=re[i]*re[i]+im[i]*im[i];
-      cout << "Maximum root of system: " << sqrt(mae) << endl;
+      
     }
-
+  } while (sqrt(mae) > 0.9); 
+  cout << "Maximum root of system: " << sqrt(mae) << endl;
   // reduced form companion matrix
   TDM B=VCat(VCat(A % F,HCat(Identity(nvar*(nlag-1)),Zeros(nvar*(nlag-1),nvar+1))),One(nvar*nlag,nvar*nlag+1));
   //cout << "B: \n" << B << endl;
@@ -369,6 +375,78 @@ void GeneralVAR(void)
   cout << "difference initial forecasts and impulse responses (irm/sbvar): " << diff << endl;
 }
 
+// =============================================
+void CalculateBVARLogMDD(void)
+{
+  // file id 
+  unsigned int fileid=2; 
+
+  string specification_file="IRM_SBVAR_3var_4lag_restricted.txt";
+  TSpecification spec(specification_file);
+  // get raw data
+  TTimeSeriesDataRaw raw_data(spec);
+	
+  // series
+  vector<string> series=spec.Strings("//== IRM: Series");
+  unsigned int n_var=series.size();
+
+  // get SBVAR number of lags
+  unsigned int n_lag=spec.NonNegativeInteger("//== SBVAR: Number Lags");
+
+  // begin and end index
+  unsigned int begin_index=spec.NonNegativeInteger("//== IRM: Begin Index");
+  unsigned int end_index=spec.NonNegativeInteger("//== IRM: End Index");
+
+  // get data
+  TDM Y=raw_data.Data(series,begin_index,end_index);
+
+  // Setup X - lagged variables
+  TDM X=raw_data.LaggedData(n_lag,series,begin_index,end_index);
+  X=HCat(X,Ones(X.Rows()));
+
+  unsigned int n_pre=X.Cols();
+
+  // get SBVAR contemporanous restriction matrix
+  TDM AC;
+  vector< vector<bool> > AR;
+  spec.RestrictionMatrix(AR,AC,"//== SBVAR: Simple Restrictions A",' ');
+
+  // get SBVAR predetermined restriction matrix
+  TDM FC;
+  vector< vector<bool> > FR;
+  spec.RestrictionMatrix(FR,FC,"//== SBVAR: Simple Restrictions F",' ');
+  
+  // create SBVAR equation mappings
+  TPArray<TLinear> Fnct;
+  TDM parameters=HCat(AC,FC);
+  for (unsigned int i=0; i < n_var; i++)
+  {
+	I idx;
+	for (unsigned int j=0; j < n_var; j++)
+   	  if (AR[i][j]) idx(j);
+	    for (unsigned int j=0; j < n_pre; j++)
+	  	if (FR[i][j]) idx(n_var+j);
+	          Fnct.push(new TLinear_insert(n_var+n_pre,idx));
+  }
+  TLinearProduct Fn(Fnct);
+
+  TDV Hyperparameters=spec.Vector("//== SBVAR: Prior Hyperparameters");
+  
+  //TLikelihood_SBVAR sbvar_likelihood(Y,X);
+  //TTimeSeries_SBVAR sbvar(sbvar_likelihood,TFlatPrior(sbvar_likelihood.NumberParameters()),TIdentityFunction(sbvar_likelihood.NumberParameters()));
+  TTimeSeries_ConjugateSBVAR sbvar(Y,X,TDensity_SimsZha(Y,X,Fn,1,Hyperparameters));
+ 
+  stringstream filename;
+  ofstream output;
+  filename.str("");
+  filename << "SBVAR_logMDD_" << n_var << "var.txt";
+  output.open(filename.str().c_str(),ios_base::app);
+  if (!output.is_open())
+     throw dw_exception("GeneralVAR() - unable to open " + filename.str());
+  output << "SBVAR_logMDD_data" << fileid << ": " << sbvar.LogMDD() << endl;
+  output.close();
+}
+ 
 /* ==========================================
 void TestGamma(void)
 {
@@ -572,13 +650,15 @@ void TestGamma(void)
 
 void GenerateData(void)
 {
-   unsigned int nvar=4;
-   unsigned int nobs=100;
+   unsigned int nvar=3;
+   unsigned int nobs=104;
+   unsigned int iddata=0;
+   unsigned int ndegree=0;
    stringstream filename;
    ofstream output;
 
    //=== generate data set =====================================================
-   filename << "IRM_data_" << nvar << "var.txt";
+   filename << "IRM_data_sigma_" << nvar << "var" << iddata << ".txt";
    output.open(filename.str().c_str());
    if (!output.is_open())
      throw dw_exception("GenerateData() - unable to open " + filename.str());
@@ -586,7 +666,7 @@ void GenerateData(void)
    output.close();
 
    filename.str("");
-   filename << "IRM_" << nvar << "var_restricted.txt";
+   filename << "IRM_" << nvar << "var_deg" << ndegree << "_restricted.txt";
    TTimeSeries_IRM irm=TTimeSeries_IRM_Specification(filename.str());
 
    // parameters
@@ -604,7 +684,7 @@ void GenerateData(void)
    vector< vector<bool> > sR;
    spec.RestrictionMatrix(sR,sC,"//== IRM: Impulse Response Restrictions",' ');
    // create mapping
-   I idx, idx_iG;
+   I idx_gs, idx_tiG, idx_tsiG;
    unsigned int k=0;
    // initial forecasts
    for (unsigned int i=0; i < n_var; i++)
@@ -612,9 +692,9 @@ void GenerateData(void)
        if (f0R[i][j])
          {
 	   if (j == 2)
-	     idx_iG(k);
+	     idx_tiG(k);
 	   else 
-	     idx(k);
+	     idx_gs(k);
 	 }
    // impulse responses
    for (unsigned int j=0; j < n_var; j++)
@@ -623,15 +703,23 @@ void GenerateData(void)
          if (sR[i][j*(degree+4)+m])
     	   {
 	      if (m == 2)
-	        idx_iG(k);
+	        idx_tiG(k);
 	      else
-		idx(k);
+		idx_gs(k);
 	   }
+  // sigma
+  TDM SC;
+  vector< vector<bool> > SR;
+  spec.RestrictionMatrix(SR,SC,"//== IRM: Sigma Restrictions",' ');
+  for (unsigned int i=0; i < n_var; k++, i++)
+    if (SR[i][0]) 
+	idx_tsiG(k);
     
    TDV raw_parameters=spec.Vector("//== IRM: parameters",' ');
-   TDV parameters(idx.Size()+idx_iG.Size());
-   parameters(I(0,idx.Size()-1),raw_parameters,idx);
-   parameters(I(idx.Size(),End),raw_parameters,idx_iG);
+   TDV parameters(idx_gs.Size()+idx_tiG.Size()+idx_tsiG.Size());
+   parameters(I(0,idx_gs.Size()-1),raw_parameters,idx_gs);
+   parameters(I(idx_gs.Size(),idx_gs.Size()+idx_tiG.Size()-1),raw_parameters,idx_tiG);
+   parameters(I(idx_gs.Size()+idx_tiG.Size(),End),raw_parameters,idx_tsiG);
   
    // TDV parameters(irm.NumberParameters());
   
@@ -649,13 +737,13 @@ void GenerateData(void)
 
    cout << parameters << endl;
    cout << irm.LikelihoodParameters(parameters) << endl;
-   vector<TDV> f0=irm.InitialForecast(parameters,100);
-   vector<TDM> s=irm.ImpulseResponse(parameters,100);
+   vector<TDV> f0=irm.InitialForecast(parameters,nobs);
+   vector<TDM> s=irm.ImpulseResponse(parameters,nobs);
    for (unsigned int i=0; i < 2; i++)
      cout << f0[i] << endl << s[i] << endl;
    // write data
    filename.str("");
-   filename << "IRM_data_" << nvar << "var.txt";
+   filename << "IRM_data_sigma_" << nvar << "var" << iddata << ".txt";
    output.open(filename.str().c_str());
    if (!output.is_open())
      throw dw_exception("GenerateData() - unable to open " + filename.str());
@@ -663,7 +751,7 @@ void GenerateData(void)
    output << irm.GenerateData(parameters,1,nobs);
    output.close();
    filename.str("");
-   filename << "IRM_" << nvar << "var_restricted.txt";
+   filename << "IRM_" << nvar << "var_deg" << ndegree << "_restricted.txt";
    TTimeSeries_IRM irm2=TTimeSeries_IRM_Specification(filename.str());
    f0=irm.InitialForecast(parameters,irm2.NumberObservations());
    s=irm.ImpulseResponse(parameters,irm2.NumberObservations());
@@ -687,11 +775,13 @@ int main(void)
 
       //TestGamma();
 
-      GeneralVAR();
+      //GeneralVAR();
 
       //GenerateData_alt();
 
-      //GenerateData();
+      GenerateData();
+      
+      //CalculateBVARLogMDD();      
 
       // vector<TDV> f0(irm.NumberObservations()+1);
       // vector<TDM> s(irm.NumberObservations());

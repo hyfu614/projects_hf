@@ -55,10 +55,11 @@ annual
 polynomial-exponential
 
 
-//** Required. If "false", the variance matrix Sigma is restricted to be the 
-//** identity.  If "true", Sigma is unrestricted.
+//** Required. If "identity", the standard deviation matrix Sigma is restricted 
+//** to be the identity.  If "diagonal", Sigma is diagonal. If "full", 
+//** Sigma is full matrix.
 //== IRM: Sigma
-identity
+diagonal
 
 //** Required.  Series to be used
 //== IRM: Series
@@ -88,9 +89,9 @@ var3
 //** Each row corresponds to a variable and determines the restrictions on a, 
 //** b, c, and d.
 //== IRM: Initial Forecast Restrictions
-X  X  2.0  0
-X  X  1.5  0
 X  X  1.0  0
+X  X  3.0  0
+X  X  2.0  0
 
 
 //** For each variable and shock, the impulse response is of the form
@@ -105,11 +106,11 @@ X  X  1.0  0
 0 0 X X  0 0 X X  0 0 X X
 
 
-//** Variance matrix
-//== IRM: Variance Restrictions
-X X X
-X X X
-X X X
+//** Sigma matrix
+//== IRM: Sigma Restrictions
+X
+X
+X
 
  
 //** Prior information
@@ -129,9 +130,28 @@ transformed inverse_Gamma
 2.0
 1.0
 
+//== IRM: Sigma Prior
+transformed square root inverse_Gamma
+1.0
+1.0
+
 //******************************************************************************
 //** End IRM Info **************************************************************
 //******************************************************************************
 
+//** parameter values - For the impulse responses, we have the transpose of s,
+//** which is because the numbers will be read in row by row.
+//== IRM: parameters
+ 3.0  0.0  1.0  0.0
+ 2.0  2.0  3.0  0.0
+ 1.5  0.0  2.0  0.0 
+
+ 0.0  0.0 -17.493  2.0    0.0  0.0  2.3026  4.0    0.0  0.0  1.6  2.5
+ 0.0  0.0  1.2040 -1.0    0.0  0.0 -7.4877  3.0    0.0  0.0  4.0  0.5
+ 0.0  0.0  2.5     3.0    0.0  0.0  1.5     1.0    0.0  0.0  2.0 -1.5 
+
+ -3.0
+  6.0
+  1.5
 
 

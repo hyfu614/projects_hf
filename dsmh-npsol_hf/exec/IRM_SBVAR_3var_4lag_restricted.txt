@@ -5,7 +5,7 @@
 //** Required field. Filename of raw data file. Can contain a path if the file 
 //** is not in the current working directory.
 //== Data: Raw File
-SBVAR_data_3var_4lag1.txt
+SBVAR_data_3var_4lag4.txt
 
 //** Required field. Delimiter used to separate fields in raw data file. 
 //** Permissible values are any printable character, "tab" or "space".
