@@ -379,7 +379,7 @@ void GeneralVAR(void)
 void CalculateBVARLogMDD(void)
 {
   // file id 
-  unsigned int fileid=2; 
+  unsigned int fileid=1; 
 
   string specification_file="IRM_SBVAR_3var_4lag_restricted.txt";
   TSpecification spec(specification_file);
@@ -435,15 +435,24 @@ void CalculateBVARLogMDD(void)
   //TLikelihood_SBVAR sbvar_likelihood(Y,X);
   //TTimeSeries_SBVAR sbvar(sbvar_likelihood,TFlatPrior(sbvar_likelihood.NumberParameters()),TIdentityFunction(sbvar_likelihood.NumberParameters()));
   TTimeSeries_ConjugateSBVAR sbvar(Y,X,TDensity_SimsZha(Y,X,Fn,1,Hyperparameters));
+  //unsigned int Ndraws=10000;
+  //TDM PosteriorDraws=sbvar.SimulatePosterior(Ndraws);
  
   stringstream filename;
   ofstream output;
   filename.str("");
   filename << "SBVAR_logMDD_" << n_var << "var.txt";
   output.open(filename.str().c_str(),ios_base::app);
+  //filename << "SBVAR_PosteriorDraw_" << n_var << "var_" << n_lag << "lag" << fileid << ".txt";
+  //output.open(filename.str().c_str());
   if (!output.is_open())
      throw dw_exception("GeneralVAR() - unable to open " + filename.str());
-  output << "SBVAR_logMDD_data" << fileid << ": " << sbvar.LogMDD() << endl;
+  output << "SBVAR_logMDD_IRMdata" << fileid << ": " << sbvar.LogMDD() << endl;
+  //for (unsigned int i=0; i<PosteriorDraws.Rows(); i++)
+  //  {
+  //    TDV x=PosteriorDraws(i,I(0,End));
+  //    output << sbvar.LogPosterior(x) << " " << sbvar.LogLikelihood(x) << " " << sbvar.LogPrior(x) << " " << x << endl;
+  //  }
   output.close();
 }
  
@@ -647,18 +656,19 @@ void TestGamma(void)
 
   // //===========================================================================
 //}
-
+/*
 void GenerateData(void)
 {
    unsigned int nvar=3;
    unsigned int nobs=104;
-   unsigned int iddata=0;
-   unsigned int ndegree=0;
+   unsigned int iddata=1;
+   unsigned int ndegree=1;
    stringstream filename;
    ofstream output;
 
    //=== generate data set =====================================================
-   filename << "IRM_data_sigma_" << nvar << "var" << iddata << ".txt";
+   filename << "IRM_data_" << nvar << "var_" << ndegree << "deg"  << iddata << ".txt";
+   //filename << "IRM_data_sigma_" << nvar << "var" << iddata << ".txt";
    output.open(filename.str().c_str());
    if (!output.is_open())
      throw dw_exception("GenerateData() - unable to open " + filename.str());
@@ -675,6 +685,17 @@ void GenerateData(void)
    unsigned int n_var=series.size();
    // degree
    unsigned int degree=spec.NonNegativeInteger("//== IRM: Degree");
+   // variance matrix type
+   string SigmaType=spec.String("//== IRM: Sigma");
+   unsigned int sigma_type;
+   if (!SigmaType.compare("identity"))
+     sigma_type=0;
+   else if (!SigmaType.compare("diagonal"))
+     sigma_type=1;
+   else if (!SigmaType.compare("full"))
+     sigma_type=2;
+   else
+     throw dw_exception("//== IRM: Sigma -- unknown type (" + SigmaType + ")");
    // get initial forecast restriction
    TDM f0C;
    vector< vector<bool> > f0R;
@@ -684,17 +705,22 @@ void GenerateData(void)
    vector< vector<bool> > sR;
    spec.RestrictionMatrix(sR,sC,"//== IRM: Impulse Response Restrictions",' ');
    // create mapping
-   I idx_gs, idx_tiG, idx_tsiG;
+   I idx_gs, idx_tig;
+   vector<I> idx_MN(3), idx_IG(2);
    unsigned int k=0;
    // initial forecasts
    for (unsigned int i=0; i < n_var; i++)
      for (unsigned int j=0; j < 4; k++, j++)
        if (f0R[i][j])
-         {
-	   if (j == 2)
-	     idx_tiG(k);
+         { 
+	   if (j == 0)
+	     idx_MN[0](k);
+	   else if (j == 1)
+	     idx_MN[1](k);
+	   else if (j == 2)
+	     idx_IG[0](k);
 	   else 
-	     idx_gs(k);
+	     idx_MN[2](k);
 	 }
    // impulse responses
    for (unsigned int j=0; j < n_var; j++)
@@ -702,24 +728,34 @@ void GenerateData(void)
        for (unsigned int m=0; m < degree+4; k++, m++)
          if (sR[i][j*(degree+4)+m])
     	   {
-	      if (m == 2)
-	        idx_tiG(k);
+	      if (m == 0)
+		idx_MN[0](k);
+	      else if (m == 1)
+		idx_MN[1](k);
+	      else if (m == 2)
+		idx_IG[0](k);
 	      else
-		idx_gs(k);
+		idx_MN[2](k);
 	   }
-  // sigma
-  TDM SC;
-  vector< vector<bool> > SR;
-  spec.RestrictionMatrix(SR,SC,"//== IRM: Sigma Restrictions",' ');
-  for (unsigned int i=0; i < n_var; k++, i++)
-    if (SR[i][0]) 
-	idx_tsiG(k);
-    
+   // sigma
+   if (sigma_type > 0)
+     {
+       TDM SC;
+       vector< vector<bool> > SR;
+       spec.RestrictionMatrix(SR,SC,"//== IRM: Sigma Restrictions",' ');
+       for (unsigned int i=0; i < n_var; k++, i++)
+         if (SR[i][0]) 
+	   idx_IG[1](k);
+     }
+   for (unsigned int i=0; i<3; i++)
+     idx_gs(idx_MN[i]);
+   for (unsigned int i=0; i<2; i++)
+     idx_tig(idx_IG[i]); 
+   
    TDV raw_parameters=spec.Vector("//== IRM: parameters",' ');
-   TDV parameters(idx_gs.Size()+idx_tiG.Size()+idx_tsiG.Size());
+   TDV parameters(idx_gs.Size()+idx_tig.Size());
    parameters(I(0,idx_gs.Size()-1),raw_parameters,idx_gs);
-   parameters(I(idx_gs.Size(),idx_gs.Size()+idx_tiG.Size()-1),raw_parameters,idx_tiG);
-   parameters(I(idx_gs.Size()+idx_tiG.Size(),End),raw_parameters,idx_tsiG);
+   parameters(I(idx_gs.Size(),End),raw_parameters,idx_tig);
   
    // TDV parameters(irm.NumberParameters());
   
@@ -743,7 +779,8 @@ void GenerateData(void)
      cout << f0[i] << endl << s[i] << endl;
    // write data
    filename.str("");
-   filename << "IRM_data_sigma_" << nvar << "var" << iddata << ".txt";
+   filename << "IRM_data_" << nvar << "var_" << ndegree << "deg"  << iddata << ".txt";
+   //filename << "IRM_data_sigma_" << nvar << "var" << iddata << ".txt";
    output.open(filename.str().c_str());
    if (!output.is_open())
      throw dw_exception("GenerateData() - unable to open " + filename.str());
@@ -766,6 +803,107 @@ void GenerateData(void)
      }
    //===========================================================================
 }
+*/
+
+void GeneralIRM(void)
+{
+   unsigned int nvar=3;
+   // unsigned int nobs=104;
+   unsigned int ndegree=1;
+   unsigned int ndraws=200000;
+   unsigned int index;
+   double para_sd=1.0e-3;
+   stringstream filename;
+  
+   filename.str("");
+   filename << "IRM_" << nvar << "var_deg" << ndegree << "_restricted.txt";
+   TTimeSeries_IRM irm=TTimeSeries_IRM_Specification(filename.str());
+
+   filename.str("");
+   filename << "./results/test4n_deg" << ndegree << "/test4n_deg" << ndegree << ".draw.text";
+   ifstream input;
+   std::string line;
+   vector<std::string> fields;
+
+   input.open(filename.str().c_str());
+   if (!input.is_open())
+     throw dw_exception("GeneralIRM() - unable to open " + filename.str());
+
+   //for (unsigned int i=0; i < 100; i++)
+   char temp=' ';
+   while (temp!='\e')
+     {
+	input.seekg(0);
+	index=dw_uniform_int(ndraws);
+	for (unsigned int i=0; i<index-1; i++)
+	  getline(input,line);
+	cout << "parameters: " << line << endl;
+	ParseLine(line,'\t',fields);
+        vector<double> vv;
+        for (unsigned int i=0; i<fields.size(); i++)
+	  vv.push_back(atof(fields[i].c_str()));
+
+	TDV parameters(vv.size()-2);
+    	for (unsigned int i=0; i < vv.size()-2; i++) 
+	  parameters[i]=vv[i+2];
+	cout << "Original LogLikelihood: " << irm.LogLikelihood(parameters) << endl;
+	parameters += para_sd*RandomNormal(parameters.Dim());
+ 	//cout << parameters << endl;
+	//parameters = irm.DrawPrior();
+	//cout << "LogPrior: " << irm.LogPrior(parameters) << endl;
+	//cout << "Original LogLikelihood: " << vv[1] << endl;
+	cout << "LogLikelihood after disturbance: " << irm.LogLikelihood(parameters) << endl;
+
+	cout << "Press Any Key to Continue or Esc Key to escape";
+	cin.get(temp);
+
+     }
+
+   input.close();
+
+   //===========================================================================
+}
+
+void TestPrior(void)
+{
+   unsigned int nvar=3;
+   // unsigned int nobs=104;
+   unsigned int ndegree=1;
+   stringstream filename;
+  
+   filename.str("");
+   filename << "IRM_KF_" << nvar << "var_deg" << ndegree << "_restricted.txt";
+   TTimeSeries_IRM irm=TTimeSeries_IRM_Specification(filename.str());
+   /*
+   for (unsigned int i=0; i < 100; i++)
+     {
+	TDV parameters;
+    	parameters = irm.DrawPrior();
+	cout << "LogPrior: " << irm.LogPrior(parameters) << endl;
+	cout << "LogLikelihood: " << irm.LogLikelihood(parameters) << endl;
+     }
+   */
+   ifstream input;
+   std::string line;
+   vector<std::string> fields;
+   input.open("parameters_test.txt");
+   getline(input,line);
+   //cout << "parameters: " << line << endl;
+   ParseLine(line,' ',fields);
+   cout << fields.size() << endl;
+   vector<double> vv;
+   for (unsigned int i=0; i<fields.size(); i++)
+     vv.push_back(atof(fields[i].c_str()));
+  
+   TDV parameters(vv.size());
+   for (unsigned int i=0; i < vv.size(); i++) 
+     parameters[i]=vv[i];
+  
+   cout << "parameters: " << parameters << endl;
+   cout << "LogPrior: " << irm.LogPrior(parameters) << endl;
+   cout << "LogLikelihood: " << irm.LogLikelihood(parameters) << endl;
+   input.close();
+}
 
 int main(void)
 {
@@ -779,9 +917,13 @@ int main(void)
 
       //GenerateData_alt();
 
-      GenerateData();
+      //GenerateData();
       
       //CalculateBVARLogMDD();      
+    
+      //GeneralIRM();
+
+      TestPrior();
 
       // vector<TDV> f0(irm.NumberObservations()+1);
       // vector<TDM> s(irm.NumberObservations());

@@ -59,7 +59,7 @@ polynomial-exponential
 //** to be the identity.  If "diagonal", Sigma is diagonal. If "full", 
 //** Sigma is full matrix.
 //== IRM: Sigma
-diagonal
+identity
 
 
 //** Required.  Series to be used
@@ -77,6 +77,10 @@ var3
 
 //== IRM: End Date
 104
+
+
+//== IRM: Number of initial observations
+4
 
 
 //== IRM: Degree
@@ -115,6 +119,12 @@ X
 
  
 //** Prior information
+//== IRM: Prior Type
+MNIG
+
+//== IRM: Prior Hyperparameters
+1.0  1.0  1.0
+
 //** admissible values
 //**   flat
 //**

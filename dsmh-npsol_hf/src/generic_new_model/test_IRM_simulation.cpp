@@ -144,8 +144,10 @@ int main(int argc, char **argv)
       	// Generate IRM model from specification file
         stringstream filename;
 	filename.str("");
-   	filename << "IRM_3var_deg" << degree << "_restricted.txt";
+   	filename << "IRM_KF_3var_deg" << degree << "_restricted.txt";
    	TTimeSeries_IRM irm=TTimeSeries_IRM_Specification(filename.str());
+        //string specification_file="IRM_3var_deg2_restricted.txt";
+        //TTimeSeries_IRM irm=TTimeSeries_IRM_Specification(specification_file); 
 	//string specification_file="IRM_SBVAR_3var_4lag_restricted.txt";
   	//TTimeSeries_IRM irm=TTimeSeries_IRM_SBVAR_Specification(specification_file);     	
 	Generic_Model_TTimeSeries target_model(irm);  
