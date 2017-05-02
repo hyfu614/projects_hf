@@ -57,7 +57,7 @@ dsmh_basci_SOURCES = CEESParameter.o CEquiEnergyModel.o CEquiEnergyModel_Initial
 
 dsmh_mpi_SOURCES = DispatchSimulation.o DispatchTuneSimulation.o EstimateLogMDD.o ExecutingSimulationTask.o GetCommunicationParameter.o HighestPlus1Stage.o HighestPlus1Stage_Prior.o master_deploying.o mdd_function.o slave_computing.o  
 
-generic_model_SOURCES = CEquiEnergy_generic_model.o generic_model_TTimeSeries.o test_IRM_SBVAR.o
+generic_model_SOURCES = CEquiEnergy_generic_model.o generic_model_TTimeSeries_IRM.o generic_model_TTimeSeries.o test_IRM_SBVAR.o
 #time_series_SOURCES = dw_data.o regime_processes.o CEquiEnergy_TimeSeries.o
 
 IRM_OBJS = $(utilities_SOURCES) TTimeSeries.o TData.o TFunction.o TDensity.o specification_io.o IRM.o sbvar.o $(dsmh_basci_SOURCES) $(dsmh_mpi_SOURCES) $(generic_model_SOURCES)

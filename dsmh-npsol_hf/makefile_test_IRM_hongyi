@@ -50,7 +50,7 @@ BUILD_DIR = $(EXEC_DIR)/build
 LIBS_DIR := $(LIBS_DIR) -L$(MKL_LIBS_DIR) -L$(GSL_LIBS_DIR) -L$(MPI_LIBS_DIR) -L$(NPSOL_LIBS_DIR)
 LIBS := $(LIBS) $(MKL_LIBS) $(NPSOL_LIBS) -lgsl -lmpich -lopa -lmpl -lrt
 INCLUDE_DIR := $(INCLUDE_DIR) -Isrc/include/dsmh_basic -Isrc/include/dsmh_mpi -I$(BASE_DIR)/utilities_dw/include -I$(IRM_PROJECT_DIR) -Isrc/include/generic_new_model -I/usr/include/gsl -I/usr/local/bin/mpich-install/include
-VPATH := $(VPATH) $(IRM_PROJECT_DIR) $(BUILD_DIR) src/dsmh_basic/ src/dsmh_mpi/ src/generic_new_model/
+VPATH := $(VPATH) $(IRM_PROJECT_DIR) $(IRM_PROJECT_DIR)/testing $(BUILD_DIR) src/dsmh_basic/ src/dsmh_mpi/ src/generic_new_model/
 
 utilities_SOURCES =dw_array.o dw_ascii.o dw_ascii_v2.o DM.o dw_elliptical.o dw_math.o dw_matrix.o dw_matrix_rand.o dw_parse_cmd.o dw_rand_gsl.o bmatrix.o dw_error.o dw_matrix_sort.o DM_lapack.o 
 
@@ -58,7 +58,7 @@ dsmh_basci_SOURCES = CEESParameter.o CEquiEnergyModel.o CEquiEnergyModel_Initial
 
 dsmh_mpi_SOURCES = DispatchSimulation.o DispatchTuneSimulation.o EstimateLogMDD.o ExecutingSimulationTask.o GetCommunicationParameter.o HighestPlus1Stage.o HighestPlus1Stage_Prior.o master_deploying.o mdd_function.o slave_computing.o  
 
-generic_model_SOURCES = CEquiEnergy_generic_model.o generic_model_TTimeSeries_IRM.o test_IRM_SBVAR.o
+generic_model_SOURCES = CEquiEnergy_generic_model.o generic_model_TTimeSeries.o test_IRM_SBVAR.o
 #time_series_SOURCES = dw_data.o regime_processes.o CEquiEnergy_TimeSeries.o
 
 IRM_OBJS = $(utilities_SOURCES) TTimeSeries.o TData.o TFunction.o TDensity.o specification_io.o IRM.o sbvar.o $(dsmh_basci_SOURCES) $(dsmh_mpi_SOURCES) $(generic_model_SOURCES)
@@ -95,7 +95,7 @@ IRM_OBJS = $(utilities_SOURCES) TTimeSeries.o TData.o TFunction.o TDensity.o spe
 #	$(CPP) $(CCFLAGS) $^ $(LIBS_DIR) $(LIBS) -o $(tvsbvar_convert_exe)
 
 #TEST_OBJS := $(sbvar_simulation_SOURCES) test_sbvar_simulation.o
-IRM_OBJS := $(IRM_OBJS) test_IRM.o
+IRM_OBJS := $(IRM_OBJS) test_computing_likelihood.o
 
 # OUTPUT
 TEST_EFILE = $(EXEC_DIR)/test_sbvar_dsmh
