@@ -144,7 +144,7 @@ int main(int argc, char **argv)
       	// Generate IRM model from specification file
         stringstream filename;
 	filename.str("");
-   	filename << "IRM_ME_4var_3shock_deg" << degree << "_restricted.txt";
+   	filename << "IRM_6var_6shock_unrestricted_specification.txt";
    	TTimeSeries_IRM irm=TTimeSeries_IRM_Specification(filename.str());
         //string specification_file="IRM_3var_deg2_restricted.txt";
         //TTimeSeries_IRM irm=TTimeSeries_IRM_Specification(specification_file); 
