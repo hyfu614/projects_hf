@@ -39,6 +39,8 @@ using namespace TS;
 	
 int main(int argc, char **argv)
 {
+  try
+    {
 	static struct option long_options[] =
         {
 		// Simulation options
@@ -54,6 +56,7 @@ int main(int argc, char **argv)
 		{"Burn-in length", required_argument, 0, 'B'}, 
                 {"Number of groups", required_argument, 0, 'G'},
 		{"Degree of IRM model", required_argument, 0, 'D'},
+		{"Specification file", required_argument, 0, 'S'},
 		// Diaoganistic options
 		{"Display jump rate", no_argument, 0, 'j'}, 
 		{"Display transitions across striations", no_argument, 0, 't'},
@@ -65,7 +68,8 @@ int main(int argc, char **argv)
         int nGroup = 1;	// default value for number of groups
 	bool if_pure_MH = false; // default: not pure metropolis hasting
 	int degree = 1;	// default value for degree of IRM model 
-	
+	string specification_file="IRM_6var_2shock_unrestricted_specification.txt"; // default value for specification file name
+
 	CEESParameter sim_option;
 	sim_option.storage_dir = string("./"); // default directory for saving results
         sim_option.storage_marker = 10000; // related to how frequncy to replenish memory from disk
@@ -83,7 +87,7 @@ int main(int argc, char **argv)
 	int option_index = 0;	
 	while (1)
         {
-                int c = getopt_long(argc, argv, "F:R:oH:M:T:P:I:N:B:G:D:jtdm", long_options, &option_index);
+                int c = getopt_long(argc, argv, "F:R:oH:M:T:P:I:N:B:G:D:S:jtdm", long_options, &option_index);
                 if (c == -1)
                         break;
 		switch(c)
@@ -112,6 +116,8 @@ int main(int argc, char **argv)
                                 nGroup = atoi(optarg); break;
 			case 'D':
                                 degree = atoi(optarg); break;
+			case 'S':
+				specification_file = string(optarg); break; 
 			case 'j':
 				diagnosis_option = static_cast<Diagnosis>(static_cast<int>(diagnosis_option) | static_cast<int>(OPT_JMP_RT)); break; 
 			case 't':
@@ -142,12 +148,12 @@ int main(int argc, char **argv)
       	//////////////////////////////////////////////////////
       	//
       	// Generate IRM model from specification file
-        stringstream filename;
-	filename.str("");
-   	filename << "IRM_6var_6shock_unrestricted_specification.txt";
-   	TTimeSeries_IRM irm=TTimeSeries_IRM_Specification(filename.str());
+        //stringstream filename;
+	//filename.str("");
+   	//filename << "IRM_6var_6shock_unrestricted_specification.txt";
+   	//TTimeSeries_IRM irm=TTimeSeries_IRM_Specification(filename.str());
         //string specification_file="IRM_3var_deg2_restricted.txt";
-        //TTimeSeries_IRM irm=TTimeSeries_IRM_Specification(specification_file); 
+        TTimeSeries_IRM irm=TTimeSeries_IRM_Specification(specification_file); 
 	//string specification_file="IRM_SBVAR_3var_4lag_restricted.txt";
   	//TTimeSeries_IRM irm=TTimeSeries_IRM_SBVAR_Specification(specification_file);     	
 	Generic_Model_TTimeSeries target_model(irm);  
@@ -208,5 +214,12 @@ int main(int argc, char **argv)
         else
 		slave_computing(N_MESSAGE, simulation_model, mode); 
 
-  	return 0;
+    }
+  catch (dw_exception &e)
+    {
+      cout << "terminated with exception: " << e.what() << endl;
+    }
+
+  return 0;
+  
 }
