@@ -155,7 +155,7 @@ static bool GetCenterScaleFromSample(const vector<CSampleIDWeight> &sample, TDV 
 		eValue[i] = sqrt(eValue[i]); 
 	//scale = MultiplyTranspose(eVector * DiagonalMatrix(eValue), eVector);
         scale = sample_square * eVector * T(eVector);
-        cout << "scale: " << scale << "\n";
+        
 	return true; 
 }
 
@@ -173,7 +173,7 @@ double LogMDD(const vector<CSampleIDWeight> &posterior, CEquiEnergyModel &model,
         } 
 	
 	TDV R = GetRadiusFromSample(posterior, center, scale); 
-        cout << "Test here!" << endl;
+        
 	//TVector center_vector = CreateVector(center.dim); 
 	//TMatrix scale_matrix = CreateMatrix(scale.rows, scale.cols); 
 	//TVector R_vector = CreateVector(R.dim); 
@@ -190,7 +190,7 @@ double LogMDD(const vector<CSampleIDWeight> &posterior, CEquiEnergyModel &model,
 	
 	double low=0.1, high=0.9; 
 	TElliptical *elliptical=(TElliptical*)NULL; 
-        cout << "Test here!" << endl;
+        
 	switch (proposal_type)
        	{
                	case USE_GAUSSIAN:
@@ -216,7 +216,7 @@ double LogMDD(const vector<CSampleIDWeight> &posterior, CEquiEnergyModel &model,
                        	abort();
                        	break;
         }
-        cout << "Test here!" << endl;
+        
 
 	TMatrix proposal_matrix=CreateProposalMatrix((int)posterior.size(), model, t, elliptical, posterior_type); 
 	TMatrix posterior_matrix=CreatePosteriorMatrix(posterior, t, elliptical, posterior_type); 
